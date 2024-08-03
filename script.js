@@ -1,4 +1,16 @@
-document.getElementById('upload-form').addEventListener('submit', function(event) {
+const password = "T3?dWuU9";
+
+document.getElementById('staff-sign-on')?.addEventListener('click', function() {
+    const userPassword = prompt("Enter the password:");
+
+    if (userPassword === password) {
+        window.location.href = "add.html";
+    } else {
+        alert("Incorrect password!");
+    }
+});
+
+document.getElementById('upload-form')?.addEventListener('submit', function(event) {
     event.preventDefault();
 
     const trackTitle = document.getElementById('track-title').value;
@@ -47,3 +59,6 @@ function addTrackToCollection(trackTitle, audioURL, photoURL, collectionName) {
     `;
     collectionDiv.appendChild(trackDiv);
 }
+
+// Sample data for demonstration
+addTrackToCollection("Sample Track", "sample.mp3", "sample.jpg", "Sample Collection");

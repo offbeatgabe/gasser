@@ -7,10 +7,10 @@
     <link rel="stylesheet" href="styles.css">
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, setDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-        // Firebase configuration
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBV5sAOUZfNrpyChOdoVEp0hO5xiElY4yo",
             authDomain: "gassor-b7534.firebaseapp.com",
@@ -108,7 +108,7 @@
         });
     </script>
 </head>
-<body id="add-page">
+<body>
     <header>
         <h1>Add New Track</h1>
         <button id="back-to-main">Back to Main</button>
@@ -126,11 +126,10 @@
 
             <label for="collection">Collection:</label>
             <select id="collection">
-                <option value="none">No Collection</option>
-                <option value="new">Add New Collection</option>
+                <option value="no-collection">No collection</option>
             </select>
-            <input type="text" id="new-collection" placeholder="New Collection Name" style="display: none;">
-            <button type="button" id="add-collection-button">Add Collection</button>
+            <input type="text" id="new-collection" placeholder="New Collection Name">
+            <button type="button" id="add-collection-button">Add New Collection</button>
 
             <button type="submit">Upload Track</button>
         </form>

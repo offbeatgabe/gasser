@@ -1,16 +1,15 @@
-/* General Styles */
 body {
     font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
     color: #e0e0e0;
-    background-color: #1b1b1b;
     margin: 0;
     padding: 0;
 }
 
 header {
-    background-color: #0d1b2a;
-    color: #e0e0e0;
-    padding: 15px;
+    background-color: #000;
+    color: #1e90ff;
+    padding: 10px 20px;
     text-align: center;
     position: relative;
 }
@@ -19,57 +18,40 @@ header h1 {
     margin: 0;
 }
 
-button {
-    background-color: #007bff;
-    color: #ffffff;
+#staff-sign-on, #back-to-main {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background-color: #1e90ff;
     border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
+    color: #fff;
+    padding: 5px 10px;
     cursor: pointer;
-    font-size: 16px;
 }
 
-button:hover {
-    background-color: #0056b3;
-}
-
-button:disabled {
-    background-color: #6c757d;
-    cursor: not-allowed;
-}
-
-a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-/* Page Specific Styles */
-#index-page {
+main {
     padding: 20px;
 }
 
 #collections {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 10px;
 }
 
 .track {
-    background-color: #2c3e50;
-    border-radius: 10px;
-    padding: 15px;
-    width: 300px;
-    text-align: center;
-    position: relative;
+    background-color: #333;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 200px;
+    margin: 10px;
+    padding: 10px;
+    color: #e0e0e0;
 }
 
 .track img {
     width: 100%;
-    border-radius: 5px;
+    height: auto;
 }
 
 .track audio {
@@ -78,58 +60,63 @@ a:hover {
 }
 
 .delete-button {
-    background-color: #dc3545;
+    background-color: #ff4d4d;
     border: none;
-    color: #ffffff;
-    border-radius: 5px;
-    padding: 5px 10px;
+    color: #fff;
+    padding: 5px;
     cursor: pointer;
-    font-size: 14px;
     margin-top: 10px;
+    border-radius: 4px;
 }
 
 .delete-button:hover {
-    background-color: #c82333;
+    background-color: #e60000;
 }
 
-/* Add Page Styles */
-#add-page {
+form {
+    background-color: #333;
+    border-radius: 8px;
     padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-#upload-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+form label {
+    display: block;
+    margin-bottom: 8px;
 }
 
-label {
-    font-weight: bold;
+form input, form select, form button {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
 }
 
-input[type="text"],
-input[type="file"],
-select {
-    border: 1px solid #007bff;
-    border-radius: 5px;
-    padding: 10px;
-    background-color: #2c3e50;
-    color: #ffffff;
+form input[type="file"] {
+    padding: 0;
 }
 
-input[type="text"]:focus,
-input[type="file"]:focus,
-select:focus {
-    border-color: #0056b3;
+form button {
+    background-color: #1e90ff;
+    color: #fff;
+    cursor: pointer;
 }
 
-#new-collection {
-    display: none;
+form button:hover {
+    background-color: #1c86ee;
 }
 
-#back-to-main {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background-color: #007bff;
+ul#collections {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul#collections li {
+    background-color: #333;
+    border-radius: 4px;
+    padding: 5px;
+    margin-bottom: 5px;
 }

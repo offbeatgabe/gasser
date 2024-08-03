@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Collection</title>
+    <title>Music Collections</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <h1>Music Collection</h1>
+        <h1>Music Collections</h1>
         <button id="staff-sign-on">Staff Sign-On</button>
     </header>
     <main>
@@ -19,34 +19,73 @@
     </main>
     <script src="script.js"></script>
     <script>
-        // Load collections and tracks from localStorage
+        // Function to fetch and display collections from the server
         function loadContent() {
-            const collectionsSection = document.getElementById('collections');
-            const collections = JSON.parse(localStorage.getItem('collections')) || {};
+            fetch('/api/collections')
+                .then(response => response.json())
+                .then(data => {
+                    const collectionsSection = document.getElementById('collections');
+                    collectionsSection.innerHTML = '';
 
-            for (const [collectionName, tracks] of Object.entries(collections)) {
-                const collectionDiv = document.createElement('div');
-                collectionDiv.classList.add('collection');
-                collectionDiv.setAttribute('data-collection', collectionName);
-                collectionDiv.innerHTML = `<h3>${collectionName}</h3>`;
-                collectionsSection.appendChild(collectionDiv);
+                    data.forEach(collection => {
+                        const collectionDiv = document.createElement('div');
+                        collectionDiv.classList.add('collection');
+                        collectionDiv.setAttribute('data-collection', collection.name);
+                        collectionDiv.innerHTML = `<h3>${collection.name}</h3>`;
 
-                tracks.forEach(track => {
-                    const trackDiv = document.createElement('div');
-                    trackDiv.classList.add('track');
-                    trackDiv.innerHTML = `
-                        <img src="${track.photoURL}" alt="${track.title}">
-                        <div>
-                            <p>${track.title}</p>
-                            <audio controls src="${track.audioURL}"></audio>
-                        </div>
-                    `;
-                    collectionDiv.appendChild(trackDiv);
-                });
-            }
+                        collection.tracks.forEach((track, index) => {
+                            const trackDiv = document.createElement('div');
+                            trackDiv.classList.add('track');
+                            trackDiv.setAttribute('data-id', track.id);
+                            trackDiv.innerHTML = `
+                                <img src="${track.photoURL}" alt="${track.title}">
+                                <div>
+                                    <p>${track.title}</p>
+                                    <audio controls src="${track.audioURL}"></audio>
+                                    <button class="delete-button">Delete</button>
+                                </div>
+                            `;
+                            collectionDiv.appendChild(trackDiv);
+                        });
+
+                        collectionsSection.appendChild(collectionDiv);
+                    });
+                })
+                .catch(error => console.error('Error fetching collections:', error));
         }
 
         document.addEventListener('DOMContentLoaded', loadContent);
+
+        // Handle track deletion
+        document.addEventListener('click', function(event) {
+            if (event.target && event.target.classList.contains('delete-button')) {
+                const trackDiv = event.target.closest('.track');
+                const trackId = trackDiv.getAttribute('data-id');
+                const collectionName = trackDiv.closest('.collection').getAttribute('data-collection');
+
+                if (confirm("Are you sure you want to delete this track?")) {
+                    fetch(`/api/track/${trackId}`, { method: 'DELETE' })
+                        .then(response => {
+                            if (response.ok) {
+                                trackDiv.remove();
+                            } else {
+                                alert("Failed to delete track.");
+                            }
+                        })
+                        .catch(error => console.error('Error deleting track:', error));
+                }
+            }
+        });
+
+        // Staff Sign-On button
+        document.getElementById('staff-sign-on')?.addEventListener('click', function() {
+            const userPassword = prompt("Enter the password:");
+            if (userPassword === "T3?dWuU9") {
+                window.location.href = "add.html";
+            } else {
+                alert("Incorrect password!");
+            }
+        });
     </script>
 </body>
 </html>

@@ -55,9 +55,17 @@ function addTrackToCollection(trackTitle, audioURL, photoURL, collectionName) {
         <div>
             <p>${trackTitle}</p>
             <audio controls src="${audioURL}"></audio>
+            <button class="delete-button">Delete</button>
         </div>
     `;
     collectionDiv.appendChild(trackDiv);
+
+    trackDiv.querySelector('.delete-button').addEventListener('click', function() {
+        collectionDiv.removeChild(trackDiv);
+        if (collectionDiv.children.length === 1) { // Only the <h3> element remains
+            collectionsSection.removeChild(collectionDiv);
+        }
+    });
 }
 
 // Sample data for demonstration

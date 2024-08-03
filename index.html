@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Upload</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Music Collection</h1>
+    </header>
+    <main>
+        <section id="upload-section">
+            <h2>Upload Music</h2>
+            <form id="upload-form">
+                <label for="track-title">Track Title:</label>
+                <input type="text" id="track-title" name="track-title" required>
+                
+                <label for="track-file">Track File:</label>
+                <input type="file" id="track-file" name="track-file" accept="audio/*" required>
+                
+                <label for="track-photo">Track Photo:</label>
+                <input type="file" id="track-photo" name="track-photo" accept="image/*" required>
+                
+                <label for="collection">Collection:</label>
+                <input type="text" id="collection" name="collection">
+                
+                <button type="submit">Upload</button>
+            </form>
+        </section>
+        <section id="collections-section">
+            <h2>Collections</h2>
+            <div id="collections"></div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

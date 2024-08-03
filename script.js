@@ -1,145 +1,104 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Load collections and tracks for index.html
-    if (document.body.id === 'index-page') {
-        loadContent();
+// Firebase imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBV5sAOUZfNrpyChOdoVEp0hO5xiElY4yo",
+    authDomain: "gassor-b7534.firebaseapp.com",
+    projectId: "gassor-b7534",
+    storageBucket: "gassor-b7534.appspot.com",
+    messagingSenderId: "1018254824459",
+    appId: "1:1018254824459:web:6a6f40184b287d5d07230e",
+    measurementId: "G-KLQQYVX5FH"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+const storage = getStorage(app);
+
+// Handle staff sign-on for admin page access
+document.getElementById('staff-sign-on').addEventListener('click', function() {
+    const userPassword = prompt("Enter the password:");
+    if (userPassword === "T3?dWuU9") {
+        window.location.href = "add.html";
+    } else {
+        alert("Incorrect password!");
     }
-
-    // Load collections and prepare form for add.html
-    if (document.body.id === 'add-page') {
-        loadCollections();
-        
-        document.getElementById('collection').addEventListener('change', function() {
-            const newCollectionInput = document.getElementById('new-collection');
-            newCollectionInput.style.display = (this.value === 'new') ? 'inline' : 'none';
-        });
-
-        document.getElementById('upload-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const trackTitle = document.getElementById('track-title').value;
-            const trackFile = document.getElementById('track-file').files[0];
-            const trackPhoto = document.getElementById('track-photo').files[0];
-            let collectionName = document.getElementById('collection').value;
-
-            if (collectionName === 'new') {
-                collectionName = document.getElementById('new-collection').value.trim();
-            }
-
-            if (trackFile && trackPhoto && trackTitle) {
-                const formData = new FormData();
-                formData.append('track-title', trackTitle);
-                formData.append('track-file', trackFile);
-                formData.append('track-photo', trackPhoto);
-                formData.append('collection', collectionName);
-
-                fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        alert("Track uploaded successfully.");
-                        window.location.href = "index.html";
-                    } else {
-                        alert("Error uploading track: " + result.message);
-                    }
-                })
-                .catch(error => console.error('Error uploading track:', error));
-            }
-        });
-
-        document.getElementById('back-to-main').addEventListener('click', function() {
-            window.location.href = "index.html";
-        });
-    }
-
-    // Handle staff sign-on
-    document.getElementById('staff-sign-on')?.addEventListener('click', function() {
-        const userPassword = prompt("Enter the password:");
-        if (userPassword === "T3?dWuU9") {
-            window.location.href = "add.html";
-        } else {
-            alert("Incorrect password!");
-        }
-    });
-
-    // Handle track deletion on index.html
-    document.addEventListener('click', function(event) {
-        if (event.target && event.target.classList.contains('delete-button')) {
-            const trackDiv = event.target.closest('.track');
-            const trackId = trackDiv.getAttribute('data-id');
-
-            if (confirm("Are you sure you want to delete this track?")) {
-                fetch(`/api/track/${trackId}`, { method: 'DELETE' })
-                    .then(response => {
-                        if (response.ok) {
-                            trackDiv.remove();
-                        } else {
-                            alert("Failed to delete track.");
-                        }
-                    })
-                    .catch(error => console.error('Error deleting track:', error));
-            }
-        }
-    });
 });
 
-// Function to load collections and tracks for index.html
-function loadContent() {
-    fetch('/api/collections')
-        .then(response => response.json())
-        .then(data => {
-            const collectionsSection = document.getElementById('collections');
-            collectionsSection.innerHTML = '';
+// Function to handle track deletions
+document.addEventListener('click', async function(event) {
+    if (event.target && event.target.classList.contains('delete-button')) {
+        const trackDiv = event.target.closest('.track');
+        const trackId = trackDiv.getAttribute('data-id');
+        const confirmDelete = confirm("Are you sure you want to delete this track?");
+        
+        if (confirmDelete) {
+            try {
+                // Fetch track data from Firestore
+                const trackDoc = doc(firestore, 'tracks', trackId);
+                const trackData = (await getDoc(trackDoc)).data();
 
-            data.forEach(collection => {
-                const collectionDiv = document.createElement('div');
-                collectionDiv.classList.add('collection');
-                collectionDiv.setAttribute('data-collection', collection.name);
-                collectionDiv.innerHTML = `<h3>${collection.name}</h3>`;
+                // Delete track file and photo from Firebase Storage
+                const fileRef = ref(storage, trackData.fileURL);
+                const photoRef = ref(storage, trackData.photoURL);
+                await Promise.all([
+                    deleteObject(fileRef),
+                    deleteObject(photoRef)
+                ]);
 
-                collection.tracks.forEach(track => {
-                    const trackDiv = document.createElement('div');
-                    trackDiv.classList.add('track');
-                    trackDiv.setAttribute('data-id', track.id);
-                    trackDiv.innerHTML = `
-                        <img src="${track.photoURL}" alt="${track.title}">
-                        <div>
-                            <p>${track.title}</p>
-                            <audio controls src="${track.audioURL}"></audio>
-                            <button class="delete-button">Delete</button>
-                        </div>
-                    `;
-                    collectionDiv.appendChild(trackDiv);
-                });
+                // Delete track document from Firestore
+                await deleteDoc(trackDoc);
 
-                collectionsSection.appendChild(collectionDiv);
-            });
-        })
-        .catch(error => console.error('Error fetching collections:', error));
-}
+                // Remove the track from the UI
+                trackDiv.remove();
+                alert('Track deleted successfully.');
+            } catch (error) {
+                console.error('Error deleting track:', error);
+                alert('Failed to delete track.');
+            }
+        }
+    }
+});
 
-// Function to load collections for add.html
-function loadCollections() {
-    fetch('/api/collections')
-        .then(response => response.json())
-        .then(data => {
-            const collectionsSelect = document.getElementById('collection');
-            const collectionsList = document.getElementById('collections');
-            collectionsSelect.innerHTML = '<option value="none">No Collection</option><option value="new">Add New Collection</option>';
-            collectionsList.innerHTML = '';
+// Code to load tracks on the index page
+document.addEventListener('DOMContentLoaded', async () => {
+    const collectionsSection = document.getElementById('collections');
 
-            data.forEach(collection => {
-                const option = document.createElement('option');
-                option.value = collection.name;
-                option.textContent = collection.name;
-                collectionsSelect.appendChild(option);
+    try {
+        // Fetch tracks from Firestore
+        const tracksCollection = collection(firestore, 'tracks');
+        const trackSnapshot = await getDocs(tracksCollection);
 
-                const li = document.createElement('li');
-                li.textContent = collection.name;
-                collectionsList.appendChild(li);
-            });
-        })
-        .catch(error => console.error('Error fetching collections:', error));
-}
+        trackSnapshot.forEach(async (doc) => {
+            const track = doc.data();
+            const trackDiv = document.createElement('div');
+            trackDiv.classList.add('track');
+            trackDiv.setAttribute('data-id', doc.id);
+
+            // Fetch URLs for track file and photo
+            const trackFileRef = ref(storage, track.fileURL);
+            const trackPhotoRef = ref(storage, track.photoURL);
+
+            const [trackFileURL, trackPhotoURL] = await Promise.all([
+                getDownloadURL(trackFileRef),
+                getDownloadURL(trackPhotoRef)
+            ]);
+
+            trackDiv.innerHTML = `
+                <img src="${trackPhotoURL}" alt="${track.title}">
+                <div>
+                    <p>${track.title}</p>
+                    <audio controls src="${trackFileURL}"></audio>
+                    <button class="delete-button">Delete</button>
+                </div>
+            `;
+            collectionsSection.appendChild(trackDiv);
+        });
+    } catch (error) {
+        console.error('Error loading tracks:', error);
+    }
+});

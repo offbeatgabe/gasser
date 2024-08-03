@@ -3,118 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Music</title>
+    <title>Add New Track</title>
     <link rel="stylesheet" href="styles.css">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBV5sAOUZfNrpyChOdoVEp0hO5xiElY4yo",
+            authDomain: "gassor-b7534.firebaseapp.com",
+            projectId: "gassor-b7534",
+            storageBucket: "gassor-b7534.appspot.com",
+            messagingSenderId: "1018254824459",
+            appId: "1:1018254824459:web:6a6f40184b287d5d07230e",
+            measurementId: "G-KLQQYVX5FH"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const firestore = getFirestore(app);
+        const storage = getStorage(app);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const collectionsSelect = document.getElementById('collection');
+            const collectionsList = document.getElementById('collections');
+
+            // Load collections from Firestore
+            const collectionsSnapshot = await getDocs(collection(firestore, 'collections'));
+            collectionsSnapshot.forEach(doc => {
+                const collectionName = doc.id;
+                const option = document.createElement('option');
+                option.value = collectionName;
+                option.textContent = collectionName;
+                collectionsSelect.appendChild(option);
+
+                const li = document.createElement('li');
+                li.textContent = collectionName;
+                collectionsList.appendChild(li);
+            });
+
+            // Add new collection if needed
+            document.getElementById('add-collection-button').addEventListener('click', async () => {
+                const newCollectionName = document.getElementById('new-collection').value.trim();
+                if (newCollectionName) {
+                    const collectionRef = doc(firestore, 'collections', newCollectionName);
+                    await setDoc(collectionRef, {});
+                    const option = document.createElement('option');
+                    option.value = newCollectionName;
+                    option.textContent = newCollectionName;
+                    collectionsSelect.appendChild(option);
+                    document.getElementById('new-collection').value = '';
+                    alert('New collection added!');
+                }
+            });
+
+            // Handle form submission
+            document.getElementById('upload-form').addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const trackTitle = document.getElementById('track-title').value;
+                const trackFile = document.getElementById('track-file').files[0];
+                const trackPhoto = document.getElementById('track-photo').files[0];
+                let collectionName = document.getElementById('collection').value;
+
+                if (collectionName === 'new') {
+                    collectionName = document.getElementById('new-collection').value.trim();
+                }
+
+                if (trackFile && trackPhoto && trackTitle) {
+                    const trackFileRef = ref(storage, `tracks/${trackFile.name}`);
+                    const trackPhotoRef = ref(storage, `photos/${trackPhoto.name}`);
+
+                    try {
+                        await uploadBytes(trackFileRef, trackFile);
+                        await uploadBytes(trackPhotoRef, trackPhoto);
+
+                        const [trackFileURL, trackPhotoURL] = await Promise.all([
+                            getDownloadURL(trackFileRef),
+                            getDownloadURL(trackPhotoRef)
+                        ]);
+
+                        await addDoc(collection(firestore, 'tracks'), {
+                            title: trackTitle,
+                            collection: collectionName,
+                            fileURL: trackFileURL,
+                            photoURL: trackPhotoURL
+                        });
+
+                        alert('Track uploaded successfully!');
+                        window.location.href = 'index.html';
+                    } catch (error) {
+                        console.error('Error uploading track:', error);
+                        alert('Error uploading track.');
+                    }
+                }
+            });
+
+            // Navigation to index page
+            document.getElementById('back-to-main').addEventListener('click', function() {
+                window.location.href = 'index.html';
+            });
+        });
+    </script>
 </head>
-<body>
+<body id="add-page">
     <header>
-        <h1>Upload Music</h1>
-        <button id="back-to-main">Back to Main Page</button>
+        <h1>Add New Track</h1>
+        <button id="back-to-main">Back to Main</button>
     </header>
     <main>
-        <section id="upload-section">
-            <h2>Upload Music</h2>
-            <form id="upload-form" enctype="multipart/form-data">
-                <label for="track-title">Track Title:</label>
-                <input type="text" id="track-title" name="track-title" required>
-                
-                <label for="track-file">Track File:</label>
-                <input type="file" id="track-file" name="track-file" accept="audio/*" required>
-                
-                <label for="track-photo">Track Photo:</label>
-                <input type="file" id="track-photo" name="track-photo" accept="image/*" required>
-                
-                <label for="collection">Collection:</label>
-                <select id="collection" name="collection">
-                    <option value="none">No Collection</option>
-                </select>
+        <form id="upload-form">
+            <label for="track-title">Track Title:</label>
+            <input type="text" id="track-title" required>
+
+            <label for="track-file">Track File:</label>
+            <input type="file" id="track-file" accept="audio/*" required>
+
+            <label for="track-photo">Track Photo:</label>
+            <input type="file" id="track-photo" accept="image/*" required>
+
+            <label for="collection">Collection:</label>
+            <select id="collection">
+                <option value="none">No Collection</option>
                 <option value="new">Add New Collection</option>
-                <input type="text" id="new-collection" placeholder="Enter new collection name" style="display: none;">
+            </select>
+            <input type="text" id="new-collection" placeholder="New Collection Name" style="display: none;">
+            <button type="button" id="add-collection-button">Add Collection</button>
 
-                <button type="submit">Upload</button>
-            </form>
-        </section>
-        <section id="collections-list">
-            <h2>Existing Collections</h2>
-            <ul id="collections"></ul>
-        </section>
+            <button type="submit">Upload Track</button>
+        </form>
+        <ul id="collections"></ul>
     </main>
-    <script src="script.js"></script>
-    <script>
-        function loadCollections() {
-            fetch('/api/collections')
-                .then(response => response.json())
-                .then(data => {
-                    const collectionsSelect = document.getElementById('collection');
-                    const collectionsList = document.getElementById('collections');
-                    collectionsSelect.innerHTML = '<option value="none">No Collection</option><option value="new">Add New Collection</option>';
-                    collectionsList.innerHTML = '';
-
-                    data.forEach(collection => {
-                        const option = document.createElement('option');
-                        option.value = collection.name;
-                        option.textContent = collection.name;
-                        collectionsSelect.appendChild(option);
-
-                        const li = document.createElement('li');
-                        li.textContent = collection.name;
-                        collectionsList.appendChild(li);
-                    });
-                })
-                .catch(error => console.error('Error fetching collections:', error));
-        }
-
-        document.getElementById('collection').addEventListener('change', function() {
-            const newCollectionInput = document.getElementById('new-collection');
-            if (this.value === 'new') {
-                newCollectionInput.style.display = 'inline';
-            } else {
-                newCollectionInput.style.display = 'none';
-            }
-        });
-
-        document.getElementById('upload-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const trackTitle = document.getElementById('track-title').value;
-            const trackFile = document.getElementById('track-file').files[0];
-            const trackPhoto = document.getElementById('track-photo').files[0];
-            let collectionName = document.getElementById('collection').value;
-
-            if (collectionName === 'new') {
-                collectionName = document.getElementById('new-collection').value.trim();
-            }
-
-            if (trackFile && trackPhoto && trackTitle) {
-                const formData = new FormData();
-                formData.append('track-title', trackTitle);
-                formData.append('track-file', trackFile);
-                formData.append('track-photo', trackPhoto);
-                formData.append('collection', collectionName);
-
-                fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        alert("Track uploaded successfully.");
-                        loadCollections(); // Refresh collections list
-                        window.location.href = "index.html"; // Redirect to main page
-                    } else {
-                        alert("Error uploading track: " + result.message);
-                    }
-                })
-                .catch(error => console.error('Error uploading track:', error));
-            }
-        });
-
-        document.getElementById('back-to-main').addEventListener('click', function() {
-            window.location.href = "index.html";
-        });
-
-        document.addEventListener('DOMContentLoaded', loadCollections);
-    </script>
 </body>
 </html>

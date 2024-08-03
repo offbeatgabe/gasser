@@ -10,63 +10,68 @@ document.getElementById('staff-sign-on')?.addEventListener('click', function() {
     }
 });
 
-document.getElementById('upload-form')?.addEventListener('submit', function(event) {
-    event.preventDefault();
-
-    const trackTitle = document.getElementById('track-title').value;
-    const trackFile = document.getElementById('track-file').files[0];
-    const trackPhoto = document.getElementById('track-photo').files[0];
-    const collectionName = document.getElementById('collection').value;
-
-    if (trackFile && trackPhoto && trackTitle) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const audioURL = e.target.result;
-
-            const photoReader = new FileReader();
-            photoReader.onload = function(e) {
-                const photoURL = e.target.result;
-
-                addTrackToCollection(trackTitle, audioURL, photoURL, collectionName);
-                document.getElementById('upload-form').reset();
-            };
-            photoReader.readAsDataURL(trackPhoto);
-        };
-        reader.readAsDataURL(trackFile);
-    }
-});
-
-function addTrackToCollection(trackTitle, audioURL, photoURL, collectionName) {
+// Function to load collections and tracks from localStorage
+function loadContent() {
     const collectionsSection = document.getElementById('collections');
-    let collectionDiv = [...collectionsSection.children].find(div => div.getAttribute('data-collection') === collectionName);
+    const collections = JSON.parse(localStorage.getItem('collections')) || {};
 
-    if (!collectionDiv) {
-        collectionDiv = document.createElement('div');
+    for (const [collectionName, tracks] of Object.entries(collections)) {
+        const collectionDiv = document.createElement('div');
         collectionDiv.classList.add('collection');
         collectionDiv.setAttribute('data-collection', collectionName);
         collectionDiv.innerHTML = `<h3>${collectionName}</h3>`;
         collectionsSection.appendChild(collectionDiv);
+
+        tracks.forEach((track, index) => {
+            const trackDiv = document.createElement('div');
+            trackDiv.classList.add('track');
+            trackDiv.setAttribute('data-index', index);
+            trackDiv.innerHTML = `
+                <img src="${track.photoURL}" alt="${track.title}">
+                <div>
+                    <p>${track.title}</p>
+                    <audio controls src="${track.audioURL}"></audio>
+                </div>
+            `;
+            collectionDiv.appendChild(trackDiv);
+        });
     }
-
-    const trackDiv = document.createElement('div');
-    trackDiv.classList.add('track');
-    trackDiv.innerHTML = `
-        <img src="${photoURL}" alt="${trackTitle}">
-        <div>
-            <p>${trackTitle}</p>
-            <audio controls src="${audioURL}"></audio>
-            <button class="delete-button">Delete</button>
-        </div>
-    `;
-    collectionDiv.appendChild(trackDiv);
-
-    trackDiv.querySelector('.delete-button').addEventListener('click', function() {
-        collectionDiv.removeChild(trackDiv);
-        if (collectionDiv.children.length === 1) { // Only the <h3> element remains
-            collectionsSection.removeChild(collectionDiv);
-        }
-    });
 }
 
-// Sample data for demonstration
-addTrackToCollection("Sample Track", "sample.mp3", "sample.jpg", "Sample Collection");
+// Function to save and remove tracks
+function saveTracksToLocalStorage(collectionName, tracks) {
+    const collections = JSON.parse(localStorage.getItem('collections')) || {};
+    collections[collectionName] = tracks;
+    localStorage.setItem('collections', JSON.stringify(collections));
+}
+
+document.addEventListener('DOMContentLoaded', loadContent);
+
+// Handling deletion of tracks
+document.addEventListener('click', function(event) {
+    if (event.target && event.target.classList.contains('delete-button')) {
+        const trackDiv = event.target.closest('.track');
+        const collectionDiv = trackDiv.closest('.collection');
+        const collectionName = collectionDiv.getAttribute('data-collection');
+        const index = trackDiv.getAttribute('data-index');
+
+        if (confirm("Are you sure you want to delete this track?")) {
+            const collections = JSON.parse(localStorage.getItem('collections')) || {};
+            if (collections[collectionName]) {
+                collections[collectionName].splice(index, 1);
+                if (collections[collectionName].length === 0) {
+                    delete collections[collectionName];
+                    collectionDiv.remove();
+                } else {
+                    saveTracksToLocalStorage(collectionName, collections[collectionName]);
+                    trackDiv.remove();
+                }
+                if (Object.keys(collections).length === 0) {
+                    localStorage.removeItem('collections');
+                } else {
+                    localStorage.setItem('collections', JSON.stringify(collections));
+                }
+            }
+        }
+    }
+});

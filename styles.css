@@ -41,7 +41,7 @@ main {
     padding: 20px;
 }
 
-#collections-section, #upload-section {
+#collections-section, #upload-section, #collections-list {
     margin-bottom: 40px;
 }
 
@@ -58,14 +58,14 @@ label {
     margin: 10px 0 5px;
 }
 
-input[type="text"], input[type="file"], button {
+input[type="text"], input[type="file"], select, button {
     padding: 10px;
     margin-bottom: 15px;
     border: none;
     border-radius: 5px;
 }
 
-input[type="text"], input[type="file"] {
+input[type="text"], input[type="file"], select {
     background-color: #333;
     color: #fff;
 }
@@ -123,8 +123,26 @@ button:hover {
     padding: 5px 10px;
     cursor: pointer;
     margin-left: 10px;
+    display: none; /* Initially hidden */
 }
 
 .track .delete-button:hover {
     background-color: darkred;
+}
+
+#new-collection {
+    margin-top: 10px;
+    display: none;
+}
+
+#collections-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+#collections-list li {
+    background-color: #1f1f1f;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
 }

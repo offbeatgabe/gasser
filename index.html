@@ -18,5 +18,35 @@
         </section>
     </main>
     <script src="script.js"></script>
+    <script>
+        // Load collections and tracks from localStorage
+        function loadContent() {
+            const collectionsSection = document.getElementById('collections');
+            const collections = JSON.parse(localStorage.getItem('collections')) || {};
+
+            for (const [collectionName, tracks] of Object.entries(collections)) {
+                const collectionDiv = document.createElement('div');
+                collectionDiv.classList.add('collection');
+                collectionDiv.setAttribute('data-collection', collectionName);
+                collectionDiv.innerHTML = `<h3>${collectionName}</h3>`;
+                collectionsSection.appendChild(collectionDiv);
+
+                tracks.forEach(track => {
+                    const trackDiv = document.createElement('div');
+                    trackDiv.classList.add('track');
+                    trackDiv.innerHTML = `
+                        <img src="${track.photoURL}" alt="${track.title}">
+                        <div>
+                            <p>${track.title}</p>
+                            <audio controls src="${track.audioURL}"></audio>
+                        </div>
+                    `;
+                    collectionDiv.appendChild(trackDiv);
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadContent);
+    </script>
 </body>
 </html>

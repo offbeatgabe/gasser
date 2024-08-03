@@ -24,12 +24,105 @@
                 <input type="file" id="track-photo" name="track-photo" accept="image/*" required>
                 
                 <label for="collection">Collection:</label>
-                <input type="text" id="collection" name="collection">
-                
+                <select id="collection" name="collection">
+                    <option value="new">Add New Collection</option>
+                    <option value="none">No Collection</option>
+                </select>
+                <input type="text" id="new-collection" placeholder="Enter new collection name" style="display: none;">
+
                 <button type="submit">Upload</button>
             </form>
         </section>
+        <section id="collections-list">
+            <h2>Existing Collections</h2>
+            <ul id="collections"></ul>
+        </section>
     </main>
     <script src="script.js"></script>
+    <script>
+        function loadCollections() {
+            const collectionsSelect = document.getElementById('collection');
+            const collectionsList = document.getElementById('collections');
+            const collections = JSON.parse(localStorage.getItem('collections')) || {};
+
+            // Clear previous options
+            collectionsSelect.innerHTML = '<option value="new">Add New Collection</option><option value="none">No Collection</option>';
+            collectionsList.innerHTML = '';
+
+            // Populate collections dropdown and list
+            for (const collectionName in collections) {
+                const option = document.createElement('option');
+                option.value = collectionName;
+                option.textContent = collectionName;
+                collectionsSelect.appendChild(option);
+
+                const li = document.createElement('li');
+                li.textContent = collectionName;
+                collectionsList.appendChild(li);
+            }
+        }
+
+        document.getElementById('collection').addEventListener('change', function() {
+            const newCollectionInput = document.getElementById('new-collection');
+            if (this.value === 'new') {
+                newCollectionInput.style.display = 'inline';
+            } else {
+                newCollectionInput.style.display = 'none';
+            }
+        });
+
+        document.getElementById('upload-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const trackTitle = document.getElementById('track-title').value;
+            const trackFile = document.getElementById('track-file').files[0];
+            const trackPhoto = document.getElementById('track-photo').files[0'];
+            let collectionName = document.getElementById('collection').value;
+
+            if (collectionName === 'new') {
+                collectionName = document.getElementById('new-collection').value.trim();
+            }
+
+            if (trackFile && trackPhoto && trackTitle && collectionName) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const audioURL = e.target.result;
+
+                    const photoReader = new FileReader();
+                    photoReader.onload = function(e) {
+                        const photoURL = e.target.result;
+
+                        saveTrack(trackTitle, audioURL, photoURL, collectionName);
+                    };
+                    photoReader.readAsDataURL(trackPhoto);
+                };
+                reader.readAsDataURL(trackFile);
+            }
+        });
+
+        function saveTrack(trackTitle, audioURL, photoURL, collectionName) {
+            const collections = JSON.parse(localStorage.getItem('collections')) || {};
+            if (!collections[collectionName]) {
+                collections[collectionName] = [];
+            }
+
+            collections[collectionName].push({
+                title: trackTitle,
+                audioURL: audioURL,
+                photoURL: photoURL
+            });
+
+            localStorage.setItem('collections', JSON.stringify(collections));
+
+            // Reload collections on this page
+            loadCollections();
+
+            // Redirect to view page
+            window.location.href = "index.html";
+        }
+
+        // Initial load of collections
+        document.addEventListener('DOMContentLoaded', loadCollections);
+    </script>
 </body>
 </html>
